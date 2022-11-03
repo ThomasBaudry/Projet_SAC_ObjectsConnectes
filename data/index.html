@@ -1,0 +1,71 @@
+ <!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Système Atmosphérique Connectés</title>
+        <link type="text/css" rel="stylesheet" href="/style.css">
+        <script type="text/javascript" src="/script.js"></script>
+    </head>
+    <body>
+        <div class="Main">
+            <div class="conteneur">
+                <div class="logo">
+                    <img src="logo_SAC.png" alt=""/>
+                </div>
+                <div class="bois">
+                    <h2>Type de Bois :</h2>
+                    <div class="type">
+                        <select id="liste_bois" class="liste_bois">
+                            <option value="">Default</option>
+                        </select>
+                    </div>
+                    <h2>Caractéristiques : </h2>
+                    <div class="caracteristique">
+                        <table class="tableau_caracteristique">
+                            <tr>
+                                <td>Bois</td>
+                                <td>: Erable</td>
+                            </tr>
+                            <tr>
+                                <td>Type</td>
+                                <td>: Dur</td>
+                            </tr>
+                            <tr>
+                                <td>Origine</td>
+                                <td>: US</td>
+                            </tr>
+                            <tr>
+                                <td>Temps de séchage</td>
+                                <td>: 20 secondes</td>
+                            </tr>
+                            <tr>
+                                <td>Température min</td>
+                                <td>: 25 Celcuis</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="conteneur">
+                <div class="four">
+                    <h2>Contrôle du four de séchage </h2>
+                    <div class="temperature">
+                        <div class="affichage_temp">
+                            <h4 class="temp_text" id="temp_text">Température du four</h4>
+                            <h3 class="temp_celcius" id="temp_celcius">23° Celcius</h3><br/>
+                        </div>
+                        <div class="controle_Info_Temperature_Button">
+                            <button class="demarrage"  id="demarrage" onclick="doAction('startAction')">Démarrage du Four</button>
+                        </div>
+                        <br/><br/><br/>
+                        <div class="information_bois conteneur">
+                            <label class="alignleft">Erable</label>
+                            <label class="aligncenter"><label id="secondes">0s</label> /20 s  (min: 25 Celcius)</label>
+                            <label class="alignright"> O O O </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
