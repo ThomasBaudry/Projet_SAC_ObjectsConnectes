@@ -64,21 +64,29 @@ MyButton *myButtonT9 = new MyButton();
 TemperatureStub *myTemp;
 
 //Gestion Ecran Oled
-#include "MyOled.h"
-MyOled *myOled = new MyOled(&Wire, OLED_RESET, SCREEN_HEIGHT, SCREEN_WIDTH);
+#include "MyOled/MyOled.h"
+#include "MyOled/MyOledView.h"
+#include "MyOled/MyOledViewInitialisation.h"
+#include "MyOled/MyOledViewWorking.h"
+#include "MyOled/MyOledViewWifiAp.h"
+#include "MyOled/MyOledViewErrorWifiConnexion.h"
+#include "MyOled/MyOledViewWorkingOFF.h"
+#include "MyOled/MyOledViewWorkingCOLD.h"
+#include "MyOled/MyOledViewWorkingHEAT.h"
 
-#include "MyOledViewInitialisation.h"
+MyOled *myOled = new MyOled(&Wire, OLED_RESET, SCREEN_HEIGHT, SCREEN_WIDTH);
 MyOledViewInitialisation *myOledViewInit = NULL;
 
-char buffer[100];
-bool demarrer = false;
-int nbSecondes = 20;
-
+// Variable pour l'affichage Oled
 const string nomSysteme = "SAC System";
 const string idSysteme = "Id0000";
 const string sensibiliteBoutonStart = "47";
 const string sensibiliteBoutonReset  = "104";
 
+// Variable Utilitaire
+char buffer[100];
+bool demarrer = false;
+int nbSecondes = 20;
 
 //fonction statique qui permet aux objets d'envoyer des messages (callBack) 
 //  arg0 : Action 
@@ -151,9 +159,7 @@ char strToPrint[128];
 
     //Initialisation des boutons
     myButtonT8->init(T8);
-    int SensibiliteT8 = myButtonT8->autoSensibilisation(); //Trouve la sensibilité automatiquement
-    sprintf(buffer, "%i", SensibiliteT8);
-    sensibiliteBoutonStart << buffer;
+    myButtonT8->autoSensibilisation(); //Trouve la sensibilité automatiquement
 
     myButtonT9->init(T9);
     myButtonT9->autoSensibilisation(); //Trouve la sensibilité automatiquement
