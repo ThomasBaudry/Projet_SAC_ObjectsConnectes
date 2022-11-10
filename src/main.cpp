@@ -47,6 +47,12 @@ String ssIDRandom;
 #define GPIO_PIN_LED_OK_GREEN             14 //GPIO14
 #define GPIO_PIN_LED_HEAT_YELLOW        27 //GPIO27
 
+//Definition des éléments de l'ecran OLED
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define OLED_RESET 4 // Reset pin # (or -1 if sharing Arduino reset pin)
+#define OLED_I2C_ADDRESS 0x3C // Adresse I2C de l'écran Oled
+
 //Gestion Button
 #include "MyButton.h"
 MyButton *myButtonT8 = new MyButton();
@@ -57,11 +63,22 @@ MyButton *myButtonT9 = new MyButton();
 #include "TemperatureStub.h"
 TemperatureStub *myTemp;
 
+//Gestion Ecran Oled
+#include "MyOled.h"
+MyOled *myOled = new MyOled(&Wire, OLED_RESET, SCREEN_HEIGHT, SCREEN_WIDTH);
+
+#include "MyOledViewInitialisation.h"
+MyOledViewInitialisation *myOledViewInit = NULL;
+
 char buffer[100];
 bool demarrer = false;
 int nbSecondes = 20;
 
-const char *COLOR_BK_PAGE = "black";
+const string nomSysteme = "SAC System";
+const string idSysteme = "Id0000";
+const string sensibiliteBoutonStart = "47";
+const string sensibiliteBoutonReset  = "104";
+
 
 //fonction statique qui permet aux objets d'envoyer des messages (callBack) 
 //  arg0 : Action 
@@ -134,7 +151,9 @@ char strToPrint[128];
 
     //Initialisation des boutons
     myButtonT8->init(T8);
-    myButtonT8->autoSensibilisation(); //Trouve la sensibilité automatiquement
+    int SensibiliteT8 = myButtonT8->autoSensibilisation(); //Trouve la sensibilité automatiquement
+    sprintf(buffer, "%i", SensibiliteT8);
+    sensibiliteBoutonStart << buffer;
 
     myButtonT9->init(T9);
     myButtonT9->autoSensibilisation(); //Trouve la sensibilité automatiquement
@@ -147,6 +166,16 @@ char strToPrint[128];
     myServer = new MyServer(80);
     myServer->initAllRoutes();
     myServer->initCallback(&CallBackMessageListener);
+
+    // Initialisation et Affichage Oled Initialisation
+    myOled->init(OLED_I2C_ADDRESS);
+    myOled->veilleDelay(30); //En secondes
+    myOledViewInit = new MyOledViewInitialisation();
+    myOledViewInit->setNomDuSysteme(nomSysteme.c_str());
+    myOledViewInit->setIdDuSysteme(idSysteme.c_str());
+    myOledViewInit->setSensibiliteBoutonAction(sensibiliteBoutonStart.c_str());
+    myOledViewInit->setSensibiliteBoutonReset(sensibiliteBoutonReset.c_str());
+    myOled->displayView(myOledViewInit);
 
  }
 

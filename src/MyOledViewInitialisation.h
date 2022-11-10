@@ -25,3 +25,27 @@
         myOledViewInitialisation = new MyOledViewInitialisation();
         myOled->displayView(myOledViewInitialisation);
 **/
+#ifndef MYOLEDVIEWINITIALISATION_H
+#define MYOLEDVIEWINITIALISATION_H
+
+#include "MyOledView.h"
+
+class MyOledViewInitialisation: public MyOledView {
+    
+    public:
+        void setNomDuSysteme(std::string val);
+        void setIdDuSysteme(std::string val);
+        void setSensibiliteBoutonAction(std::string val);
+        void setSensibiliteBoutonReset(std::string val);
+
+    private:
+        void display( Adafruit_SSD1306 *adafruit);
+        void update(Adafruit_SSD1306 *adafruit);
+        
+        std::string nomDuSysteme = "???";
+        std::string idDuSyteme = "???";
+        std::string SensibiliteBoutonAction = "???";
+        std::string SensibiliteBoutonReset = "???";
+      
+};
+#endif
