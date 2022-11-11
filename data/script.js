@@ -22,7 +22,7 @@ x.add(option);
 
 
 
-setInterval(function getNomSysteme(){
+setInterval(function getTemperature(){
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
     if(this.status == 200) {

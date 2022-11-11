@@ -36,6 +36,7 @@ void MyServer::initAllRoutes() {
         request->send(SPIFFS, "/script.js", "text/javascript");
         });
 
+    //Route du style CSS
     this->on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(SPIFFS, "/style.css", "text/css");
         });
@@ -45,6 +46,7 @@ void MyServer::initAllRoutes() {
         request->send(SPIFFS, "/logo_SAC.png", "image/png");
         });
 
+    // Recupère le nom du four
     this->on("/getNomEsp", HTTP_GET, [](AsyncWebServerRequest *request) {
         std::string repString = "";
         if (ptrToCallBackFunction) repString = (*ptrToCallBackFunction)("askNomFour");
@@ -52,6 +54,7 @@ void MyServer::initAllRoutes() {
         request->send(200, "text/plain", lireNomDuFour );
         });
 
+    // Recupère la température du four
     this->on("/lireTemp", HTTP_GET, [](AsyncWebServerRequest *request) {
         std::string repString = "";
         if (ptrToCallBackFunction) repString = (*ptrToCallBackFunction)("askTempFour");
@@ -59,7 +62,7 @@ void MyServer::initAllRoutes() {
         request->send(200, "text/plain", lireTempDuFour );
         });
 
-
+    // Demarrage du four
     this->on("/ActionToDo", HTTP_POST, [](AsyncWebServerRequest *request) {
         if (request->hasParam("actionToDo", true)) {
         String actionToDo = request->getParam("actionToDo", true)->value();

@@ -43,7 +43,7 @@ class MyOledViewInitialisation: public MyOledView {
         void update(Adafruit_SSD1306 *adafruit);
         
         std::string nomDuSysteme = "???";
-        std::string idDuSyteme = "???";
+        std::string idDuSysteme = "???";
         std::string SensibiliteBoutonAction = "???";
         std::string SensibiliteBoutonReset = "???";
       

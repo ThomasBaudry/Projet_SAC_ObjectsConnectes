@@ -13,7 +13,7 @@ void MyOledViewWifiAp::setNomDuSysteme(std::string val){
     nomDuSysteme = val;
 }
 void  MyOledViewWifiAp::setSsIDDuSysteme(std::string val){
-    ssIDDuSyteme = val;
+    ssIDDuSysteme = val;
 }
 void  MyOledViewWifiAp::setPassDuSysteme(std::string val){
     passDuSysteme = val;
@@ -26,9 +26,23 @@ void  MyOledViewWifiAp::update(Adafruit_SSD1306 *adafruit){
 
 void  MyOledViewWifiAp::display( Adafruit_SSD1306 *adafruit) {
     Serial.println("MyOledViewWifiAp");
+    char strNom[120];
+    char strSsID[120];
+    char strPass[120];
+    sprintf(strNom, "Id:  %s", nomDuSysteme.c_str());
+    sprintf(strSsID, "  SSID : %s", ssIDDuSysteme.c_str());
+    sprintf(strPass, "  PASS : %s", passDuSysteme.c_str());
 
-    // 
-    // Display à faire !!!
-    //
+    adafruit->clearDisplay();
+
+    adafruit->setCursor(0, 0);
+    adafruit->setTextSize(2);
+    adafruit->println(nomDuSysteme.c_str());
+    adafruit->setTextSize(1);
+    adafruit->println(strNom);
+    adafruit->println("AP Configuration");
+    adafruit->println(strSsID);
+    adafruit->println(strPass);
+    adafruit->display();
 
     }

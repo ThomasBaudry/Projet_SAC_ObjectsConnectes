@@ -42,7 +42,7 @@ class MyOledViewWifiAp: public MyOledView {
         void update(Adafruit_SSD1306 *adafruit);
         
         std::string nomDuSysteme = "???";
-        std::string ssIDDuSyteme = "???";
+        std::string ssIDDuSysteme = "???";
         std::string passDuSysteme = "???";
       
 };

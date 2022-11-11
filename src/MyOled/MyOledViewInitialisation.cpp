@@ -13,7 +13,7 @@ void MyOledViewInitialisation::setNomDuSysteme(std::string val){
     nomDuSysteme = val;
 }
 void MyOledViewInitialisation::setIdDuSysteme(std::string val){
-    idDuSyteme = val;
+    idDuSysteme = val;
 }
 void MyOledViewInitialisation::setSensibiliteBoutonAction(std::string val){
     SensibiliteBoutonAction = val;
@@ -33,7 +33,7 @@ void MyOledViewInitialisation::display( Adafruit_SSD1306 *adafruit) {
     char strId[120];
     char strAction[120];
     char strReset[120];
-    sprintf(strId, "Id:  %s", idDuSyteme.c_str());
+    sprintf(strId, "Id:  %s", idDuSysteme.c_str());
     sprintf(strAction, "Bouton ACTION : %s", SensibiliteBoutonAction.c_str());
     sprintf(strReset, "Bouton RESET : %s", SensibiliteBoutonReset.c_str());
 

@@ -43,7 +43,7 @@ String ssIDRandom;
 
 
 //Définition des trois leds de statut
-#define GPIO_PIN_LED_LOCK_ROUGE         12 //GPIO12
+#define GPIO_PIN_LED_LOCK_RED           12 //GPIO12
 #define GPIO_PIN_LED_OK_GREEN             14 //GPIO14
 #define GPIO_PIN_LED_HEAT_YELLOW        27 //GPIO27
 
@@ -76,17 +76,24 @@ TemperatureStub *myTemp;
 
 MyOled *myOled = new MyOled(&Wire, OLED_RESET, SCREEN_HEIGHT, SCREEN_WIDTH);
 MyOledViewInitialisation *myOledViewInit = NULL;
+MyOledViewWifiAp *myOledViewWifi = NULL;
+MyOledViewWorkingOFF *myOledViewWorkingOFF = NULL;
+MyOledViewWorkingCOLD *myOledViewWorkingCOLD = NULL;
+MyOledViewWorkingHEAT *myOledViewWorkingHEAT = NULL;
 
 // Variable pour l'affichage Oled
 const string nomSysteme = "SAC System";
 const string idSysteme = "Id0000";
-const string sensibiliteBoutonStart = "47";
-const string sensibiliteBoutonReset  = "104";
+char sensibiliteBoutonStart[20] = "???";
+char sensibiliteBoutonReset[20] = "???";
+
+int etatFour = 0; // Etat du four / Différents etat possible: OFF = 0, COLD = 1, HEAT = 2
 
 // Variable Utilitaire
 char buffer[100];
 bool demarrer = false;
 int nbSecondes = 20;
+float temp = 0;
 
 //fonction statique qui permet aux objets d'envoyer des messages (callBack) 
 //  arg0 : Action 
@@ -111,9 +118,10 @@ std::string CallBackMessageListener(string message) {
     if (string(actionToDo.c_str()).compare(string("askNomFour")) == 0) {
      return(nomDuFour.c_str()); }
 
-    float temp = myTemp->getTemperature();
-    sprintf(buffer, "%4.1f °C", temp);
+    
     if (string(actionToDo.c_str()).compare(string("askTempFour")) == 0) {
+      temp = myTemp->getTemperature();
+      sprintf(buffer, "%4.1f °C", temp);
       return(buffer); }
 
     if (string(actionToDo.c_str()).compare(string("startAction")) == 0) {
@@ -123,11 +131,68 @@ std::string CallBackMessageListener(string message) {
    
     std::string result = "";
     return result;
-    }
+}
+
+void RefreshMyOledParams(){
+switch(etatFour){
+    case 0: // Etat OFF
+        myOledViewWorkingOFF->setParams("nomDuSysteme", nomSysteme.c_str());
+        myOledViewWorkingOFF->setParams("idDuSysteme", idSysteme.c_str());
+        myOledViewWorkingOFF->setParams("temperature", buffer);
+        myOledViewWorkingOFF->setParams("ipDuSysteme", WiFi.localIP().toString().c_str());
+        break;
+
+    case 1: // Etat COLD
+        myOledViewWorkingCOLD->setParams("nomDuSysteme", nomSysteme.c_str());
+        myOledViewWorkingCOLD->setParams("idDuSysteme", idSysteme.c_str());
+        myOledViewWorkingCOLD->setParams("temperature", buffer);
+        myOledViewWorkingCOLD->setParams("ipDuSysteme", WiFi.localIP().toString().c_str());
+        break;
+            
+    case 2: // Etat HEAT
+        myOledViewWorkingHEAT->setParams("nomDuSysteme", nomSysteme.c_str());
+        myOledViewWorkingHEAT->setParams("idDuSysteme", idSysteme.c_str());
+        myOledViewWorkingHEAT->setParams("temperature", buffer);
+        myOledViewWorkingHEAT->setParams("ipDuSysteme", WiFi.localIP().toString().c_str());
+        break;
+}
+}
 
 void setup() { 
     Serial.begin(9600);
     delay(100);
+
+    // Initialisation OLED et Affichage Oled Initialisation
+    myOled->init(OLED_I2C_ADDRESS);
+    myOled->veilleDelay(30); //En secondes
+    myOledViewInit = new MyOledViewInitialisation();
+    myOledViewInit->setNomDuSysteme(nomSysteme.c_str());
+    myOledViewInit->setIdDuSysteme(idSysteme.c_str());
+    myOledViewInit->setSensibiliteBoutonAction(sensibiliteBoutonStart);
+    myOledViewInit->setSensibiliteBoutonReset(sensibiliteBoutonReset);
+    myOled->displayView(myOledViewInit);
+
+    //Initialisation des LED statuts
+    pinMode(GPIO_PIN_LED_LOCK_RED  ,OUTPUT);
+    pinMode(GPIO_PIN_LED_OK_GREEN,      OUTPUT);
+    pinMode(GPIO_PIN_LED_HEAT_YELLOW,OUTPUT);
+
+    //Initialisation des boutons
+    myButtonT8->init(T8);
+    int buttonSensiT8 = myButtonT8->autoSensibilisation(); //Trouve la sensibilité automatiquement
+    sprintf(sensibiliteBoutonStart, "%i", buttonSensiT8);
+    
+    myButtonT9->init(T9);
+    int buttonSensiT9 = myButtonT9->autoSensibilisation(); //Trouve la sensibilité automatiquement
+    sprintf(sensibiliteBoutonReset, "%i", buttonSensiT9);
+
+    myOledViewInit->setSensibiliteBoutonAction(sensibiliteBoutonStart);
+    myOledViewInit->setSensibiliteBoutonReset(sensibiliteBoutonReset);
+    myOled->displayView(myOledViewInit);
+
+    //Initialisation sensor température
+    myTemp = new TemperatureStub();
+    myTemp->init(15, DHT22); 
 
  //Connection au WifiManager
     String ssIDRandom, PASSRandom;
@@ -152,45 +217,43 @@ char strToPrint[128];
         Serial.println("Connexion Établie.");
         }
 
-    //Initialisation des LED statuts
-    pinMode(GPIO_PIN_LED_LOCK_ROUGE  ,OUTPUT);
-    pinMode(GPIO_PIN_LED_OK_GREEN,      OUTPUT);
-    pinMode(GPIO_PIN_LED_HEAT_YELLOW,OUTPUT);
-
-    //Initialisation des boutons
-    myButtonT8->init(T8);
-    myButtonT8->autoSensibilisation(); //Trouve la sensibilité automatiquement
-
-    myButtonT9->init(T9);
-    myButtonT9->autoSensibilisation(); //Trouve la sensibilité automatiquement
-
-    //Initialisation sensor température
-    myTemp = new TemperatureStub();
-    myTemp->init(15, DHT22); 
+    // Affichage OLED Connection WIFI
+    myOledViewWifi = new MyOledViewWifiAp();
+    myOledViewWifi->setNomDuSysteme(nomSysteme.c_str());
+    myOledViewWifi->setSsIDDuSysteme(ssIDRandom.c_str());
+    myOledViewWifi->setPassDuSysteme(PASSRandom.c_str());
+    myOled->displayView(myOledViewWifi);
 
     // ----------- Routes du serveur ----------------
     myServer = new MyServer(80);
     myServer->initAllRoutes();
     myServer->initCallback(&CallBackMessageListener);
 
-    // Initialisation et Affichage Oled Initialisation
-    myOled->init(OLED_I2C_ADDRESS);
-    myOled->veilleDelay(30); //En secondes
-    myOledViewInit = new MyOledViewInitialisation();
-    myOledViewInit->setNomDuSysteme(nomSysteme.c_str());
-    myOledViewInit->setIdDuSysteme(idSysteme.c_str());
-    myOledViewInit->setSensibiliteBoutonAction(sensibiliteBoutonStart.c_str());
-    myOledViewInit->setSensibiliteBoutonReset(sensibiliteBoutonReset.c_str());
-    myOled->displayView(myOledViewInit);
-
+    for (int i=0;i<2;i++) 
+    {
+        digitalWrite(GPIO_PIN_LED_OK_GREEN,HIGH);
+        digitalWrite(GPIO_PIN_LED_HEAT_YELLOW,HIGH);
+        digitalWrite(GPIO_PIN_LED_LOCK_RED,HIGH);
+        delay(500);
+        digitalWrite(GPIO_PIN_LED_OK_GREEN,LOW);
+        digitalWrite(GPIO_PIN_LED_HEAT_YELLOW,LOW);
+        digitalWrite(GPIO_PIN_LED_LOCK_RED,LOW);
+        delay(500); 
+    }
  }
 
 void loop() {
-    float temp = myTemp->getTemperature();
+    temp = myTemp->getTemperature();
     sprintf(buffer, "%4.1f °C", temp);
-    //Serial.println(buffer);
+    RefreshMyOledParams();
 
     if(demarrer){
+        if(etatFour == 0){
+            etatFour = 1;
+        }
+        if(etatFour == 1){
+            myOled->displayView(myOledViewWorkingCOLD);
+        }
         sprintf(buffer, "%i secondes.", nbSecondes);
         Serial.println(buffer);
         nbSecondes--;
@@ -198,6 +261,14 @@ void loop() {
             Serial.println("Cuisson terminé!");
             demarrer = false;
             nbSecondes = 20;
+            etatFour = 2;
+        }
+    }else{
+        if(etatFour == 0){
+            myOled->displayView(myOledViewWorkingOFF);
+        }
+        if(etatFour == 2){
+            myOled->displayView(myOledViewWorkingHEAT);
         }
     }
     delay(1000);
