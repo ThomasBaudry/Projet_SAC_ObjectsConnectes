@@ -26,23 +26,14 @@ setInterval(function getTemperature(){
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
     if(this.status == 200) {
-    document.getElementById("temp_celcius").innerHTML = this.responseText;
+    var myResponse = this.responseText.split(";");
+    document.getElementById("temp_celcius").innerHTML = myResponse[0];
+    document.getElementById("secondes").innerHTML = myResponse[1];
     }
     };
     xhttp.open("GET", "lireTemp", true);
     xhttp.send();
 
-    if(demarrer){
-        if(nbSecondes == 0){
-            document.getElementById("secondes").innerHTML = 0 + "s";
-            nbSecondes = 20;
-            demarrer = false;
-        }else{
-            document.getElementById("secondes").innerHTML = nbSecondes + "s";
-            nbSecondes--;
-        }
-
-    }
    }, 1000);
 
 function doAction(actionToDo) {

@@ -88,9 +88,11 @@ char sensibiliteBoutonStart[20] = "???";
 char sensibiliteBoutonReset[20] = "???";
 
 int etatFour = 0; // Etat du four / Différents etat possible: OFF = 0, COLD = 1, HEAT = 2
+float tempDemander = 23; // La température de chauffage attendu
 
 // Variable Utilitaire
-char buffer[100];
+char laTemperature[100];
+char lesSecondes[100];
 bool demarrer = false;
 int nbSecondes = 20;
 float temp = 0;
@@ -121,8 +123,8 @@ std::string CallBackMessageListener(string message) {
     
     if (string(actionToDo.c_str()).compare(string("askTempFour")) == 0) {
       temp = myTemp->getTemperature();
-      sprintf(buffer, "%4.1f °C", temp);
-      return(buffer); }
+      sprintf(laTemperature, "%4.1f °C;%is", temp, nbSecondes);
+      return(laTemperature); }
 
     if (string(actionToDo.c_str()).compare(string("startAction")) == 0) {
         Serial.println("Demarrage du four!");
@@ -138,22 +140,25 @@ switch(etatFour){
     case 0: // Etat OFF
         myOledViewWorkingOFF->setParams("nomDuSysteme", nomSysteme.c_str());
         myOledViewWorkingOFF->setParams("idDuSysteme", idSysteme.c_str());
-        myOledViewWorkingOFF->setParams("temperature", buffer);
+        myOledViewWorkingOFF->setParams("temperature", laTemperature);
         myOledViewWorkingOFF->setParams("ipDuSysteme", WiFi.localIP().toString().c_str());
+        myOled->displayView(myOledViewWorkingOFF);
         break;
 
     case 1: // Etat COLD
         myOledViewWorkingCOLD->setParams("nomDuSysteme", nomSysteme.c_str());
         myOledViewWorkingCOLD->setParams("idDuSysteme", idSysteme.c_str());
-        myOledViewWorkingCOLD->setParams("temperature", buffer);
+        myOledViewWorkingCOLD->setParams("temperature", laTemperature);
         myOledViewWorkingCOLD->setParams("ipDuSysteme", WiFi.localIP().toString().c_str());
+        myOled->displayView(myOledViewWorkingCOLD);
         break;
             
     case 2: // Etat HEAT
         myOledViewWorkingHEAT->setParams("nomDuSysteme", nomSysteme.c_str());
         myOledViewWorkingHEAT->setParams("idDuSysteme", idSysteme.c_str());
-        myOledViewWorkingHEAT->setParams("temperature", buffer);
+        myOledViewWorkingHEAT->setParams("temperature", laTemperature);
         myOledViewWorkingHEAT->setParams("ipDuSysteme", WiFi.localIP().toString().c_str());
+        myOled->displayView(myOledViewWorkingHEAT);
         break;
 }
 }
@@ -217,17 +222,20 @@ char strToPrint[128];
         Serial.println("Connexion Établie.");
         }
 
+    
     // Affichage OLED Connection WIFI
     myOledViewWifi = new MyOledViewWifiAp();
     myOledViewWifi->setNomDuSysteme(nomSysteme.c_str());
     myOledViewWifi->setSsIDDuSysteme(ssIDRandom.c_str());
     myOledViewWifi->setPassDuSysteme(PASSRandom.c_str());
     myOled->displayView(myOledViewWifi);
+    
 
     // ----------- Routes du serveur ----------------
     myServer = new MyServer(80);
     myServer->initAllRoutes();
     myServer->initCallback(&CallBackMessageListener);
+
 
     for (int i=0;i<2;i++) 
     {
@@ -240,35 +248,41 @@ char strToPrint[128];
         digitalWrite(GPIO_PIN_LED_LOCK_RED,LOW);
         delay(500); 
     }
+
+    myOledViewWorkingOFF = new MyOledViewWorkingOFF();
+    myOledViewWorkingCOLD = new MyOledViewWorkingCOLD();
+    myOledViewWorkingHEAT = new MyOledViewWorkingHEAT();
  }
 
 void loop() {
     temp = myTemp->getTemperature();
-    sprintf(buffer, "%4.1f °C", temp);
+    sprintf(laTemperature, "%4.1f C", temp);
     RefreshMyOledParams();
-
     if(demarrer){
-        if(etatFour == 0){
-            etatFour = 1;
+        if(etatFour == 0){etatFour = 1;}
+
+        if(temp > (tempDemander * 0.90) && temp < (tempDemander * 1.10)){
+            if(etatFour == 1){etatFour = 2;}
+            sprintf(lesSecondes, "%i secondes.", nbSecondes);
+            Serial.println(lesSecondes);
+            nbSecondes--;
+            if(nbSecondes == 0){
+                Serial.println("Cuisson terminé!");
+                demarrer = false;
+                nbSecondes = 20;
+                etatFour = 0;
+            }
         }
-        if(etatFour == 1){
-            myOled->displayView(myOledViewWorkingCOLD);
-        }
-        sprintf(buffer, "%i secondes.", nbSecondes);
-        Serial.println(buffer);
-        nbSecondes--;
-        if(nbSecondes == 0){
-            Serial.println("Cuisson terminé!");
-            demarrer = false;
-            nbSecondes = 20;
-            etatFour = 2;
-        }
-    }else{
-        if(etatFour == 0){
-            myOled->displayView(myOledViewWorkingOFF);
-        }
-        if(etatFour == 2){
-            myOled->displayView(myOledViewWorkingHEAT);
+        else{
+            if(temp < (tempDemander * 0.90) ){
+                Serial.println("Cuisson annulé! Température trop faible");
+                demarrer = false;
+                nbSecondes = 20;
+                etatFour = 0;
+            }
+            else{
+                if(etatFour == 2){etatFour = 1;}
+            }
         }
     }
     delay(1000);

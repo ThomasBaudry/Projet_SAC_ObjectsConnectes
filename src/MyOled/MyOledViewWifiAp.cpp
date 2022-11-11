@@ -34,7 +34,6 @@ void  MyOledViewWifiAp::display( Adafruit_SSD1306 *adafruit) {
     sprintf(strPass, "  PASS : %s", passDuSysteme.c_str());
 
     adafruit->clearDisplay();
-
     adafruit->setCursor(0, 0);
     adafruit->setTextSize(2);
     adafruit->println(nomDuSysteme.c_str());

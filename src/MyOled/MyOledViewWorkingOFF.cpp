@@ -10,9 +10,9 @@
 using namespace std;
 
 void  MyOledViewWorkingOFF::display( Adafruit_SSD1306 *adafruit) {
-    Serial.println("MyOledViewWorkingOFF");
     
     adafruit->clearDisplay();
+    adafruit->setTextColor(WHITE);
     adafruit->setTextSize(2);
     adafruit->setCursor(0, 0);
     adafruit->print(getTag("nomDuSysteme").c_str());
@@ -24,9 +24,12 @@ void  MyOledViewWorkingOFF::display( Adafruit_SSD1306 *adafruit) {
 
     adafruit->setCursor(80, 20);
     adafruit->print("Ready");
-    adafruit->setCursor(80, 30);
+
+    adafruit->setTextSize(2);
+    adafruit->setCursor(50, 30);
     adafruit->print(getTag("temperature").c_str());
     
+    adafruit->setTextSize(1);
     adafruit->setCursor(40, 50);
     adafruit->print(getTag("ipDuSysteme").c_str());
 
