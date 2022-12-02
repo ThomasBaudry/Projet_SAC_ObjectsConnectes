@@ -6,7 +6,9 @@
 */
 #include <Arduino.h>
 #include "MyServer.h"
+#include <ArduinoJson.h>
 using namespace std;
+
 
 typedef std::string (*CallbackType)(std::string);
 CallbackType MyServer::ptrToCallBackFunction = NULL;
@@ -52,6 +54,39 @@ void MyServer::initAllRoutes() {
         if (ptrToCallBackFunction) repString = (*ptrToCallBackFunction)("askNomFour");
         String lireNomDuFour =String(repString.c_str());
         request->send(200, "text/plain", lireNomDuFour );
+        });
+
+    // Recupère la liste des bois
+    this->on("/getListeWood", HTTP_GET, [](AsyncWebServerRequest *request) {
+        std::string repString = "";
+        if (ptrToCallBackFunction) repString = (*ptrToCallBackFunction)("askListeWood");
+        DynamicJsonDocument doc(2048);
+        deserializeJson(doc,repString);
+        String lesBois;
+        for(JsonObject elem : doc.as<JsonArray>()){
+            String woodName = elem["name"];
+            lesBois += woodName + String(";");
+            Serial.println(lesBois);
+        }
+        request->send(200, "text/plain", lesBois);
+        });
+    
+    // Recupère le Bois
+    this->on("/afficherBois", HTTP_POST, [](AsyncWebServerRequest *request) {
+        std::string repString = "";
+        String nomBois = request->getParam("nomBois", true)->value();
+        char buffer[100];
+        sprintf(buffer, "afficherBois %S", nomBois);
+        if (ptrToCallBackFunction) repString = (*ptrToCallBackFunction)(buffer);
+        DynamicJsonDocument doc(2048);
+        deserializeJson(doc,repString);
+        String leBois;
+        for(JsonObject elem : doc.as<JsonArray>()){
+            String woodName = elem["name"];
+            leBois += woodName + String(";");
+            Serial.println(leBois);
+        }
+        request->send(200, "text/plain", leBois);
         });
 
     // Recupère la température du four

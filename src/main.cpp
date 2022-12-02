@@ -30,6 +30,8 @@ using namespace std;
 #include <HTTPClient.h>
 #include <WiFiManager.h>
 WiFiManager wm;
+WiFiClient client;
+HTTPClient http;
 #define WEBSERVER_H
 
 //Pour la gestion du serveur ESP32
@@ -41,6 +43,13 @@ const char *SSID = "SAC_";
 const char *PASSWORD = "sac_";
 String ssIDRandom;
 
+//Définition de variable général
+#define SERIAL_BEGIN_CONFIG   9600  
+#define SERVER_PORT 80    // Port du serveur.
+#define GPIO_PIN_DHT_22   15 //GPIO15
+#define NOM_FOUR   "Four9394"  //Nom du Four utilisé par le système 
+#define API_ADRESS_GETALLWOODS   "http://149.56.141.62:3000/api/woods/getAllWoods" 
+#define API_ADRESS_GETWOOD   "http://149.56.141.62:3000/api/woods/getWood/" 
 
 //Définition des trois leds de statut
 #define GPIO_PIN_LED_LOCK_RED           12 //GPIO12
@@ -52,6 +61,7 @@ String ssIDRandom;
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 #define OLED_RESET 4 // Reset pin # (or -1 if sharing Arduino reset pin)
 #define OLED_I2C_ADDRESS 0x3C // Adresse I2C de l'écran Oled
+#define OLD_VEILLE_SECONDES 30  // Temps avant mise en veille de l'ecran Oled
 
 //Gestion Button
 #include "MyButton.h"
@@ -91,8 +101,9 @@ int etatFour = 0; // Etat du four / Différents etat possible: OFF = 0, COLD = 1
 float tempDemander = 23; // La température de chauffage attendu
 
 // Variable Utilitaire
+String reponse;
 char laTemperature[100];
-char lesSecondes[100];
+char lesSecondes[100];                  
 bool demarrer = false;
 int nbSecondes = 20;
 float temp = 0;
@@ -116,8 +127,9 @@ std::string CallBackMessageListener(string message) {
     string arg10 = getValue(message, ' ', 10);
 
 
-    std::string nomDuFour = "Four9394";
+    
     if (string(actionToDo.c_str()).compare(string("askNomFour")) == 0) {
+     std::string nomDuFour = NOM_FOUR;
      return(nomDuFour.c_str()); }
 
     
@@ -130,11 +142,32 @@ std::string CallBackMessageListener(string message) {
         Serial.println("Demarrage du four!");
         demarrer = true;
         return(""); }
+
+    if (string(actionToDo.c_str()).compare(string("askListeWood")) == 0) {
+        http.begin(client, API_ADRESS_GETALLWOODS);
+        http.GET();
+        reponse = http.getString();
+        Serial.print(reponse);
+        http.end();
+        return(reponse.c_str()); }
+
+    if (string(actionToDo.c_str()).compare(string("afficherBois")) == 0) {
+        char buffer[100];
+        sprintf(buffer, "http://149.56.141.62:3000/api/woods/getWood/%S", arg1.c_str());
+        Serial.println(buffer);
+        http.begin(client, buffer);
+        http.GET();
+        reponse = http.getString();
+        Serial.print(reponse);
+        
+        http.end();
+        return(reponse.c_str()); }
    
     std::string result = "";
     return result;
 }
 
+//fonction qui permet d'affiché et rafraichir la vue d'etat du four.
 void RefreshMyOledParams(){
 switch(etatFour){
     case 0: // Etat OFF
@@ -164,12 +197,12 @@ switch(etatFour){
 }
 
 void setup() { 
-    Serial.begin(9600);
+    Serial.begin(SERIAL_BEGIN_CONFIG);
     delay(100);
 
     // Initialisation OLED et Affichage Oled Initialisation
     myOled->init(OLED_I2C_ADDRESS);
-    myOled->veilleDelay(30); //En secondes
+    myOled->veilleDelay(OLD_VEILLE_SECONDES);
     myOledViewInit = new MyOledViewInitialisation();
     myOledViewInit->setNomDuSysteme(nomSysteme.c_str());
     myOledViewInit->setIdDuSysteme(idSysteme.c_str());
@@ -232,10 +265,26 @@ char strToPrint[128];
     
 
     // ----------- Routes du serveur ----------------
-    myServer = new MyServer(80);
+    myServer = new MyServer(SERVER_PORT);
     myServer->initAllRoutes();
     myServer->initCallback(&CallBackMessageListener);
 
+    // ----- Get Information du Bois de l'Api. -----
+    /*
+    http.begin(client, API_ADRESS_WOODS);
+    http.GET();
+    reponse = http.getString();
+    Serial.print(reponse);
+    http.end();
+    DynamicJsonDocument doc(2048);
+    deserializeJson(doc,reponse);
+    String lesBois;
+    for(JsonObject elem : doc.as<JsonArray>()){
+        String woodName = elem["name"];
+        lesBois += woodName + String(" ");
+        Serial.println(lesBois);
+    }*/
+    
 
     for (int i=0;i<2;i++) 
     {
@@ -252,6 +301,9 @@ char strToPrint[128];
     myOledViewWorkingOFF = new MyOledViewWorkingOFF();
     myOledViewWorkingCOLD = new MyOledViewWorkingCOLD();
     myOledViewWorkingHEAT = new MyOledViewWorkingHEAT();
+
+    digitalWrite(GPIO_PIN_LED_OK_GREEN,HIGH);
+
  }
 
 void loop() {
@@ -259,10 +311,18 @@ void loop() {
     sprintf(laTemperature, "%4.1f C", temp);
     RefreshMyOledParams();
     if(demarrer){
-        if(etatFour == 0){etatFour = 1;}
+        if(etatFour == 0){
+            etatFour = 1;
+            digitalWrite(GPIO_PIN_LED_OK_GREEN,LOW);
+            digitalWrite(GPIO_PIN_LED_HEAT_YELLOW,HIGH);
+        }
 
         if(temp > (tempDemander * 0.90) && temp < (tempDemander * 1.10)){
-            if(etatFour == 1){etatFour = 2;}
+            if(etatFour == 1){
+                etatFour = 2;
+                digitalWrite(GPIO_PIN_LED_HEAT_YELLOW,LOW);
+                digitalWrite(GPIO_PIN_LED_LOCK_RED,HIGH);
+            }
             sprintf(lesSecondes, "%i secondes.", nbSecondes);
             Serial.println(lesSecondes);
             nbSecondes--;
@@ -271,6 +331,8 @@ void loop() {
                 demarrer = false;
                 nbSecondes = 20;
                 etatFour = 0;
+                digitalWrite(GPIO_PIN_LED_LOCK_RED,LOW);
+                digitalWrite(GPIO_PIN_LED_OK_GREEN,HIGH);
             }
         }
         else{
@@ -279,9 +341,15 @@ void loop() {
                 demarrer = false;
                 nbSecondes = 20;
                 etatFour = 0;
+                digitalWrite(GPIO_PIN_LED_LOCK_RED,LOW);
+                digitalWrite(GPIO_PIN_LED_OK_GREEN,HIGH);
             }
             else{
-                if(etatFour == 2){etatFour = 1;}
+                if(etatFour == 2){
+                    etatFour = 1;
+                    digitalWrite(GPIO_PIN_LED_LOCK_RED,LOW);
+                    digitalWrite(GPIO_PIN_LED_HEAT_YELLOW,HIGH);
+                }
             }
         }
     }

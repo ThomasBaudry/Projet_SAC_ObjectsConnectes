@@ -1,7 +1,7 @@
 var nbSecondes = 20;
 var demarrer = false;
 
-function getFromESP_getNom () {
+function getFromESP_NomFour () {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
     if (this.readyState == 4 && this.status == 200) {
@@ -13,11 +13,43 @@ function getFromESP_getNom () {
    }
 
 
-function Liste_Bois_Select(item, index){
-    var x = document.getElementById("liste_bois");
-var option = document.createElement("option");
-option.text = item;
-x.add(option);
+function getFromESP_ListeWood(){
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+        var reponse = this.responseText;
+        var reponse = reponse.slice(0, -1);
+        var lesBois = reponse.split(";");
+        var x = document.getElementById("liste_bois");
+
+        for (let i = 0; i < lesBois.length; i++) {
+          var option = document.createElement("option");
+          option.text = lesBois[i];
+          x.add(option);
+          }
+    }
+    };
+    xhttp.open("GET", "getListeWood", true);
+    xhttp.send();
+}
+
+function afficherBois(){
+    nomBois = document.getElementById("liste_bois").value;
+    var params = String("nomBois") + String("=") + String(nomBois);
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+        var reponse = this.responseText;
+        var reponse = reponse.slice(0, -1);
+        alert(reponse);
+        var lesBois = reponse.split(";");
+        document.getElementById("carac_bois").innerHTML = lesBois[0];
+
+    }
+    };
+    xhttp.open("POST", "afficherBois", true);
+    xhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    xhttp.send(params);
 }
 
 
@@ -43,10 +75,4 @@ function doAction(actionToDo) {
     xhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
     xhttp.send(params);
     demarrer = true;
-    }
-
-function countSecondes(){
-    for (let i = 20; i > 0; i--) {
-        document.getElementById("secondes").innerHTML = i + "s";
-    }
 }
