@@ -83,7 +83,11 @@ void MyServer::initAllRoutes() {
         String leBois;
         for(JsonObject elem : doc.as<JsonArray>()){
             String woodName = elem["name"];
-            leBois += woodName + String(";");
+            String woodType = elem["type"];
+            String woodOrigine = elem["origin"];
+            String woodDryingTime = elem["dryingTime"];
+            String woodTemperature = elem["temperature"];
+            leBois += woodName + String(";") +  woodType + String(";") + woodOrigine + String(";") + woodDryingTime + String(";") + woodTemperature + String(";");
             Serial.println(leBois);
         }
         request->send(200, "text/plain", leBois);

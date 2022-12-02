@@ -44,6 +44,13 @@ function afficherBois(){
         alert(reponse);
         var lesBois = reponse.split(";");
         document.getElementById("carac_bois").innerHTML = lesBois[0];
+        document.getElementById("bois").innerHTML = lesBois[0];
+        document.getElementById("carac_type").innerHTML = lesBois[1];
+        document.getElementById("carac_origine").innerHTML = lesBois[2];
+        document.getElementById("carac_tempsSechage").innerHTML = lesBois[3];
+        document.getElementById("tempsSechage").innerHTML = lesBois[3];
+        document.getElementById("carac_temperatureMin").innerHTML = lesBois[4];
+        document.getElementById("temperatureMin").innerHTML = lesBois[4];
 
     }
     };

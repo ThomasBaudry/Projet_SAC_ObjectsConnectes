@@ -99,9 +99,11 @@ char sensibiliteBoutonReset[20] = "???";
 
 int etatFour = 0; // Etat du four / Différents etat possible: OFF = 0, COLD = 1, HEAT = 2
 float tempDemander = 23; // La température de chauffage attendu
+int tempsSechage = 20; // Le temps de séchage du bois.
 
 // Variable Utilitaire
-String reponse;
+String JsonListeBois;
+String JsonLeBois;
 char laTemperature[100];
 char lesSecondes[100];                  
 bool demarrer = false;
@@ -146,22 +148,29 @@ std::string CallBackMessageListener(string message) {
     if (string(actionToDo.c_str()).compare(string("askListeWood")) == 0) {
         http.begin(client, API_ADRESS_GETALLWOODS);
         http.GET();
-        reponse = http.getString();
-        Serial.print(reponse);
+        JsonListeBois = http.getString();
+        Serial.print(JsonListeBois);
         http.end();
-        return(reponse.c_str()); }
+        return(JsonListeBois.c_str()); }
 
     if (string(actionToDo.c_str()).compare(string("afficherBois")) == 0) {
         char buffer[100];
         sprintf(buffer, "http://149.56.141.62:3000/api/woods/getWood/%S", arg1.c_str());
         Serial.println(buffer);
         http.begin(client, buffer);
+        http.addHeader("Authorization","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2Njg3ODUyMjF9.jhT6LpcaUyx5w0gXGldjC9TZxymvArrzvPt6GG2WukM");
         http.GET();
-        reponse = http.getString();
-        Serial.print(reponse);
-        
+        JsonLeBois = http.getString();
+        Serial.print(JsonLeBois);
         http.end();
-        return(reponse.c_str()); }
+        DynamicJsonDocument doc(2048);
+        deserializeJson(doc,JsonLeBois);
+        for(JsonObject elem : doc.as<JsonArray>()){
+            tempDemander = elem["temperature"];
+            tempsSechage = elem["dryingTime"];
+            nbSecondes = tempsSechage;
+        }
+        return(JsonLeBois.c_str()); }
    
     std::string result = "";
     return result;
@@ -269,22 +278,7 @@ char strToPrint[128];
     myServer->initAllRoutes();
     myServer->initCallback(&CallBackMessageListener);
 
-    // ----- Get Information du Bois de l'Api. -----
-    /*
-    http.begin(client, API_ADRESS_WOODS);
-    http.GET();
-    reponse = http.getString();
-    Serial.print(reponse);
-    http.end();
-    DynamicJsonDocument doc(2048);
-    deserializeJson(doc,reponse);
-    String lesBois;
-    for(JsonObject elem : doc.as<JsonArray>()){
-        String woodName = elem["name"];
-        lesBois += woodName + String(" ");
-        Serial.println(lesBois);
-    }*/
-    
+
 
     for (int i=0;i<2;i++) 
     {
@@ -329,7 +323,7 @@ void loop() {
             if(nbSecondes == 0){
                 Serial.println("Cuisson terminé!");
                 demarrer = false;
-                nbSecondes = 20;
+                nbSecondes = tempsSechage;
                 etatFour = 0;
                 digitalWrite(GPIO_PIN_LED_LOCK_RED,LOW);
                 digitalWrite(GPIO_PIN_LED_OK_GREEN,HIGH);
@@ -339,7 +333,7 @@ void loop() {
             if(temp < (tempDemander * 0.90) ){
                 Serial.println("Cuisson annulé! Température trop faible");
                 demarrer = false;
-                nbSecondes = 20;
+                nbSecondes = tempsSechage;
                 etatFour = 0;
                 digitalWrite(GPIO_PIN_LED_LOCK_RED,LOW);
                 digitalWrite(GPIO_PIN_LED_OK_GREEN,HIGH);
