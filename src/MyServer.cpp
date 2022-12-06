@@ -48,13 +48,6 @@ void MyServer::initAllRoutes() {
         request->send(SPIFFS, "/logo_SAC.png", "image/png");
         });
 
-    // Recupère le nom du four
-    this->on("/getNomEsp", HTTP_GET, [](AsyncWebServerRequest *request) {
-        std::string repString = "";
-        if (ptrToCallBackFunction) repString = (*ptrToCallBackFunction)("askNomFour");
-        String lireNomDuFour =String(repString.c_str());
-        request->send(200, "text/plain", lireNomDuFour );
-        });
 
     // Recupère la liste des bois
     this->on("/getListeWood", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -66,12 +59,11 @@ void MyServer::initAllRoutes() {
         for(JsonObject elem : doc.as<JsonArray>()){
             String woodName = elem["name"];
             lesBois += woodName + String(";");
-            Serial.println(lesBois);
         }
         request->send(200, "text/plain", lesBois);
         });
     
-    // Recupère le Bois
+    // Recupère les information d'un Bois
     this->on("/afficherBois", HTTP_POST, [](AsyncWebServerRequest *request) {
         std::string repString = "";
         String nomBois = request->getParam("nomBois", true)->value();

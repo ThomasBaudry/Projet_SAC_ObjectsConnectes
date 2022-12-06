@@ -49,7 +49,6 @@ String ssIDRandom;
 #define GPIO_PIN_DHT_22   15 //GPIO15
 #define NOM_FOUR   "Four9394"  //Nom du Four utilisé par le système 
 #define API_ADRESS_GETALLWOODS   "http://149.56.141.62:3000/api/woods/getAllWoods" 
-#define API_ADRESS_GETWOOD   "http://149.56.141.62:3000/api/woods/getWood/" 
 
 //Définition des trois leds de statut
 #define GPIO_PIN_LED_LOCK_RED           12 //GPIO12
@@ -104,11 +103,11 @@ int tempsSechage = 20; // Le temps de séchage du bois.
 // Variable Utilitaire
 String JsonListeBois;
 String JsonLeBois;
-char laTemperature[100];
-char lesSecondes[100];                  
-bool demarrer = false;
-int nbSecondes = 20;
-float temp = 0;
+int nbSecondes = 20;        // Nombre de secondes restante pour le fonctionnement du four.
+float temp = 0;             // La température actuel du Four.
+char laTemperature[100];    // Température actuel mais en char.
+char lesSecondes[100];      // Secondes restante mais en char.             
+bool demarrer = false;      // Savoir si le four est démmarrer ou non.
 
 //fonction statique qui permet aux objets d'envoyer des messages (callBack) 
 //  arg0 : Action 
@@ -129,39 +128,34 @@ std::string CallBackMessageListener(string message) {
     string arg10 = getValue(message, ' ', 10);
 
 
-    
-    if (string(actionToDo.c_str()).compare(string("askNomFour")) == 0) {
-     std::string nomDuFour = NOM_FOUR;
-     return(nomDuFour.c_str()); }
-
-    
+    // Recupère la Température
     if (string(actionToDo.c_str()).compare(string("askTempFour")) == 0) {
       temp = myTemp->getTemperature();
       sprintf(laTemperature, "%4.1f °C;%is", temp, nbSecondes);
       return(laTemperature); }
 
+    // Démarre le Four.
     if (string(actionToDo.c_str()).compare(string("startAction")) == 0) {
         Serial.println("Demarrage du four!");
         demarrer = true;
         return(""); }
 
+    // Recupère la liste des bois.
     if (string(actionToDo.c_str()).compare(string("askListeWood")) == 0) {
         http.begin(client, API_ADRESS_GETALLWOODS);
         http.GET();
         JsonListeBois = http.getString();
-        Serial.print(JsonListeBois);
         http.end();
         return(JsonListeBois.c_str()); }
 
+    // Recupère les informations d'un bois.
     if (string(actionToDo.c_str()).compare(string("afficherBois")) == 0) {
         char buffer[100];
         sprintf(buffer, "http://149.56.141.62:3000/api/woods/getWood/%S", arg1.c_str());
-        Serial.println(buffer);
         http.begin(client, buffer);
         http.addHeader("Authorization","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2Njg3ODUyMjF9.jhT6LpcaUyx5w0gXGldjC9TZxymvArrzvPt6GG2WukM");
         http.GET();
         JsonLeBois = http.getString();
-        Serial.print(JsonLeBois);
         http.end();
         DynamicJsonDocument doc(2048);
         deserializeJson(doc,JsonLeBois);
@@ -241,7 +235,7 @@ void setup() {
     myTemp = new TemperatureStub();
     myTemp->init(15, DHT22); 
 
- //Connection au WifiManager
+    //Connection au WifiManager
     String ssIDRandom, PASSRandom;
     String stringRandom;
     stringRandom = get_random_string(4).c_str();
@@ -251,12 +245,12 @@ void setup() {
     PASSRandom = PASSWORD;
     PASSRandom = PASSRandom + stringRandom;
 
-char strToPrint[128];
+    char strToPrint[128];
     sprintf(strToPrint, "Identification : %s   MotDePasse: %s", ssIDRandom, PASSRandom);
     Serial.println(strToPrint);
 
 
- if (!wm.autoConnect(ssIDRandom.c_str(), PASSRandom.c_str())){
+    if (!wm.autoConnect(ssIDRandom.c_str(), PASSRandom.c_str())){
         Serial.println("Erreur de connexion.");
       
         }
@@ -279,7 +273,7 @@ char strToPrint[128];
     myServer->initCallback(&CallBackMessageListener);
 
 
-
+    // Clignotement 2 fois des LEDs pour signifié que le système est opérationnel.
     for (int i=0;i<2;i++) 
     {
         digitalWrite(GPIO_PIN_LED_OK_GREEN,HIGH);
