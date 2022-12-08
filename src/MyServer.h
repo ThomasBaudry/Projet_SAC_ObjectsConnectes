@@ -1,12 +1,13 @@
 /**
     Class MyServer :  Pour la gestion des routes pour le site WEB
     @file MyServer.h 
-    @author Alain Dubé
+    @author Thomas Baudry
     @version 1.1 21/09/20 
     
     Historique des versions   
                             Versions  Date      Auteur      Description
                             1.0      21/09/20   Ald         Première version de la classe
+                            1.1      08/12/2022 Thomas      Deuxième version de la classe
                             
                             
     platform = espressif32
@@ -25,6 +26,14 @@
 
         //Mettre les fichiers du site WEB dans le réportoire /data
         //et téléverser en utilisant "Upload Filesystem Image" dans PlatformIO
+
+    @modification
+        Ajout de nouvelle route pour l'interface Web dans initAllRoutes():
+            - /logo_SAC.png : Route pour afficher l'image.
+            - /getListeWood : Recupère et envoie la liste des bois.
+            - /afficherBois : Recupère les information d'un Bois.
+            - /lireTemp     : Recupère et envoie la température actuelle du four.
+            - /ActionToDo   : Demarrage du four.
 
 **/
 #ifndef MYSERVER_H

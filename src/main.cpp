@@ -1,20 +1,73 @@
-/* 
+/* Copyright (C) 2022
+ * All rights reserved.
  *
- * Projet Sac
+ * Projet SAC
  * Ecole du Web
- * Cours Objets connectés (c)2021
+ * Cours Objets connectés (c)2022
  *  
     @file     main.cpp
-    @author   Thomas Baudry
-    @version  1.0 30/09/2022 
+    @author   BAUDRY Thomas
+    @version  1.2 08/12/22 
 
+    Historique des versions
+           Version    Date       Auteur       Description
+           1.1        21/08/15  Alain       Première version du logiciel
+           1.2        03/11/22  Thomas      Seconde version du logiciel
 
-Configuration du système
+    platform = espressif32
+    board = esp32doit-devkit-v1
+    framework = arduino
+    lib_deps =  
+            ESPAsyncWebServer-esphome                   (Pour accéder au Wifi)
+            AsyncTCP-esphome                            (Pour utiliser les focntionnalités TCP)
+            bblanchon/ArduinoJson@^6.17.2               (Pour accéder au fonctionnalités Json)
+            adafruit/Adafruit GFX Library @ ^1.10.1
+            adafruit/Adafruit SSD1306 @ ^2.4.0
+            adafruit/Adafruit NeoPixel @ ^1.7.0
+            adafruit/Adafruit VEML6075 Library@^2.2.0
+            adafruit/Adafruit BusIO@^1.14.1
 
-            GPIO12 : pin 12   Rouge 
-            GPIO14 : pin 14  Vert                              
-            GPIO27 : pin 27  Jaune                              
+    Autres librairies (à copier dans le répertoire lib)
+        ° WifiManager
+            //Remarques
+            //Pour trouver le WifiManager (dans la branche development)
+            //   https://github.com/tzapu/WiFiManager/tree/development
+            //   Ne pas oublier d'appuyez sur l'ampoule et choisir : ajouter Lib
+        ° Classes Oled :
+            - MyOled
+            - MyOledView
+            - MyOledViewErrorWifiConnexion
+            - MyOledViewInitialisation
+            - MyOledViewWifiAp
+            - MyOledViewWorking
+            - MyOledViewWorkingCOLD
+            - MyOledViewWorkingHEAT
+            - MyOledViewWorkingOFF
+        ° MyButton
+            //Fonctionnement des boutons Action et Reset
+        ° MYLIB
+            //Fonctions utiles (voir plus bas)
+        ° DHT
+            //Fonctionnement du DHT22
 
+    
+    Fonctions utiles (utilitaires)
+        /lib/MYLIB/myFunctions.cpp
+            //Pour vérifier plus simplement que deux chaines sont identiques
+            bool isEqualString(std::string line1, std::string line2)
+            //Pour extraire une partie d'une chaine de caractères avec l'aide d'un index
+            std::string getValue(std::string data, char separator, int index)
+            //Pour remplacer plus facilement une sous chaine
+            bool replaceAll(std::string& source, const std::string& from, const std::string& to)
+            //Pour obtenir un chaine aléatoire d'une certaine longeur
+            std::string get_random_string(unsigned int len)
+    
+    Configuration du système
+
+            GPIO12 : pin 12  LED_Rouge 
+            GPIO14 : pin 14  LED_Vert                              
+            GPIO27 : pin 27  LED_Jaune  
+            GPIO15 : pin 15  DHT 22  (Sensor de température)
 
  * */
 #include <iostream>
@@ -45,15 +98,15 @@ String ssIDRandom;
 
 //Définition de variable général
 #define SERIAL_BEGIN_CONFIG   9600  
-#define SERVER_PORT 80    // Port du serveur.
-#define GPIO_PIN_DHT_22   15 //GPIO15
+#define SERVER_PORT 80         // Port du serveur.
+#define GPIO_PIN_DHT_22   15   //GPIO15
 #define NOM_FOUR   "Four9394"  //Nom du Four utilisé par le système 
-#define API_ADRESS_GETALLWOODS   "http://149.56.141.62:3000/api/woods/getAllWoods" 
+#define API_ADRESS_GETALLWOODS   "http://149.56.141.62:3000/api/woods/getAllWoods"
 
 //Définition des trois leds de statut
-#define GPIO_PIN_LED_LOCK_RED           12 //GPIO12
-#define GPIO_PIN_LED_OK_GREEN             14 //GPIO14
-#define GPIO_PIN_LED_HEAT_YELLOW        27 //GPIO27
+#define GPIO_PIN_LED_LOCK_RED           12     //GPIO12
+#define GPIO_PIN_LED_OK_GREEN           14     //GPIO14
+#define GPIO_PIN_LED_HEAT_YELLOW        27     //GPIO27
 
 //Definition des éléments de l'ecran OLED
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
@@ -83,6 +136,7 @@ TemperatureStub *myTemp;
 #include "MyOled/MyOledViewWorkingCOLD.h"
 #include "MyOled/MyOledViewWorkingHEAT.h"
 
+// Initialisation des vues Oled
 MyOled *myOled = new MyOled(&Wire, OLED_RESET, SCREEN_HEIGHT, SCREEN_WIDTH);
 MyOledViewInitialisation *myOledViewInit = NULL;
 MyOledViewWifiAp *myOledViewWifi = NULL;
@@ -96,6 +150,7 @@ const string idSysteme = "Id0000";
 char sensibiliteBoutonStart[20] = "???";
 char sensibiliteBoutonReset[20] = "???";
 
+// Variable pour la gestion du four.
 int etatFour = 0; // Etat du four / Différents etat possible: OFF = 0, COLD = 1, HEAT = 2
 float tempDemander = 23; // La température de chauffage attendu
 int tempsSechage = 20; // Le temps de séchage du bois.
@@ -170,6 +225,9 @@ std::string CallBackMessageListener(string message) {
 }
 
 //fonction qui permet d'affiché et rafraichir la vue d'etat du four.
+// Four prêt à démmarer     : Etat OFF
+// Four en attente          : Etat COLD
+// Four en fonctionnement   : Etat HEAT
 void RefreshMyOledParams(){
 switch(etatFour){
     case 0: // Etat OFF
@@ -226,6 +284,7 @@ void setup() {
     int buttonSensiT9 = myButtonT9->autoSensibilisation(); //Trouve la sensibilité automatiquement
     sprintf(sensibiliteBoutonReset, "%i", buttonSensiT9);
 
+    //Actualisation de la vue Oled Initialisation
     myOledViewInit->setSensibiliteBoutonAction(sensibiliteBoutonStart);
     myOledViewInit->setSensibiliteBoutonReset(sensibiliteBoutonReset);
     myOled->displayView(myOledViewInit);
@@ -296,7 +355,7 @@ void setup() {
 void loop() {
     temp = myTemp->getTemperature();
     sprintf(laTemperature, "%4.1f C", temp);
-    RefreshMyOledParams();
+    RefreshMyOledParams(); 
     if(demarrer){
         if(etatFour == 0){
             etatFour = 1;
