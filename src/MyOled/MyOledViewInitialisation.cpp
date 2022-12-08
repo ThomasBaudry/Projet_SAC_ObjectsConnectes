@@ -22,11 +22,12 @@ void MyOledViewInitialisation::setSensibiliteBoutonReset(std::string val){
     SensibiliteBoutonReset = val;
 }
 
-
+// Actualisation de la vue du Oled
 void MyOledViewInitialisation::update(Adafruit_SSD1306 *adafruit){
     Serial.println("Update my view MyOledViewInitialisation");
     }
 
+// Affichage de la vue du Oled
 void MyOledViewInitialisation::display( Adafruit_SSD1306 *adafruit) {
     Serial.println("MyOledViewInitialisation");
 

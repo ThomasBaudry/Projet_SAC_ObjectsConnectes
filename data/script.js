@@ -30,7 +30,6 @@ function afficherBois(){
     if (this.readyState == 4 && this.status == 200) {
         var reponse = this.responseText;
         var reponse = reponse.slice(0, -1);
-        alert(reponse);
         var lesBois = reponse.split(";");
         document.getElementById("carac_bois").innerHTML = lesBois[0];
         document.getElementById("bois").innerHTML = lesBois[0];

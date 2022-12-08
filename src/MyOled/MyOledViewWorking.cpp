@@ -34,10 +34,12 @@ void MyOledViewWorking::displayGifFireAnimated(Adafruit_SSD1306 *adafruit, int p
     adafruit->display();
     }
 
+// Actualisation de la vue du Oled
 void MyOledViewWorking::update(Adafruit_SSD1306 *adafruit){
     Serial.println("Update my view MyOledViewWorking");
     }
 
+// Affichage de la vue du Oled
 void MyOledViewWorking::display( Adafruit_SSD1306 *adafruit) {
     Serial.println("MyOledViewWorking");
     adafruit->setTextColor(WHITE);

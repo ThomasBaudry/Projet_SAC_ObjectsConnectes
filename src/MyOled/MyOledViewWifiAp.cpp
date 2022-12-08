@@ -19,11 +19,12 @@ void  MyOledViewWifiAp::setPassDuSysteme(std::string val){
     passDuSysteme = val;
 }
 
-
+// Actualisation de la vue du Oled
 void  MyOledViewWifiAp::update(Adafruit_SSD1306 *adafruit){
     Serial.println("Update my view MyOledViewWifiAp");
     }
 
+// Affichage de la vue du Oled
 void  MyOledViewWifiAp::display( Adafruit_SSD1306 *adafruit) {
     Serial.println("MyOledViewWifiAp");
     char strNom[120];

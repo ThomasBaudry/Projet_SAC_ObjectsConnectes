@@ -136,7 +136,6 @@ std::string CallBackMessageListener(string message) {
 
     // Démarre le Four.
     if (string(actionToDo.c_str()).compare(string("startAction")) == 0) {
-        Serial.println("Demarrage du four!");
         demarrer = true;
         return(""); }
 
@@ -312,10 +311,8 @@ void loop() {
                 digitalWrite(GPIO_PIN_LED_LOCK_RED,HIGH);
             }
             sprintf(lesSecondes, "%i secondes.", nbSecondes);
-            Serial.println(lesSecondes);
             nbSecondes--;
             if(nbSecondes == 0){
-                Serial.println("Cuisson terminé!");
                 demarrer = false;
                 nbSecondes = tempsSechage;
                 etatFour = 0;
@@ -325,7 +322,6 @@ void loop() {
         }
         else{
             if(temp < (tempDemander * 0.90) ){
-                Serial.println("Cuisson annulé! Température trop faible");
                 demarrer = false;
                 nbSecondes = tempsSechage;
                 etatFour = 0;

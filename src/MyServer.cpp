@@ -73,14 +73,13 @@ void MyServer::initAllRoutes() {
         DynamicJsonDocument doc(2048);
         deserializeJson(doc,repString);
         String leBois;
-        for(JsonObject elem : doc.as<JsonArray>()){
+        for(JsonObject elem : doc.as<JsonArray>()){  
             String woodName = elem["name"];
             String woodType = elem["type"];
             String woodOrigine = elem["origin"];
             String woodDryingTime = elem["dryingTime"];
             String woodTemperature = elem["temperature"];
             leBois += woodName + String(";") +  woodType + String(";") + woodOrigine + String(";") + woodDryingTime + String(";") + woodTemperature + String(";");
-            Serial.println(leBois);
         }
         request->send(200, "text/plain", leBois);
         });
@@ -104,7 +103,7 @@ void MyServer::initAllRoutes() {
         request->send(204);
         });
 
-   
+    // Fonction appeler si aucune page trouvé.
     this->onNotFound([](AsyncWebServerRequest *request){
         request->send(404, "text/plain", "Page Not Found");
         });
