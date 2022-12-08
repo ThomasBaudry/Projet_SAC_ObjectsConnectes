@@ -9,6 +9,7 @@
 
 using namespace std;
 
+
 void  MyOledViewWorkingOFF::display( Adafruit_SSD1306 *adafruit) {
     
     adafruit->clearDisplay();

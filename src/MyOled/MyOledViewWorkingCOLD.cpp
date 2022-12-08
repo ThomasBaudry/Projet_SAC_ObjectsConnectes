@@ -9,10 +9,12 @@
 
 using namespace std;
 
+// Actualisation de la vue du Oled
 void  MyOledViewWorkingCOLD::update(Adafruit_SSD1306 *adafruit){
     Serial.println("Update my view MyOledViewWorkingCOLD");
     }
 
+// Affichage de la vue du Oled
 void  MyOledViewWorkingCOLD::display( Adafruit_SSD1306 *adafruit) {
 
     adafruit->clearDisplay();
