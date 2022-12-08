@@ -1,9 +1,9 @@
-## Projet C# de session : "SAC" (Système Atmosphérique Connecté)
+## Projet C de session : "SAC" (Système Atmosphérique Connecté)
 	# Matière : Objets Connectés
 	# Professeur : Dubé Alain
 	# Auteurs : Baudry Thomas - Guillou Quentin
 	# Lien : https://github.com/Huo1ong/ObjetsConnectes_ProjetIODeSession
-  # API : http://149.56.141.62:3000/myApiDocs/
+  	# API : http://149.56.141.62:3000/myApiDocs/
 
 ## Installation
 Premièrement, vous devez créer un nouveau projet PlatformIO sous Visual Studio Code. 
