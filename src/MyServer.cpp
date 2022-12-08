@@ -6,7 +6,9 @@
 */
 #include <Arduino.h>
 #include "MyServer.h"
+#include <ArduinoJson.h>
 using namespace std;
+
 
 typedef std::string (*CallbackType)(std::string);
 CallbackType MyServer::ptrToCallBackFunction = NULL;
@@ -36,6 +38,7 @@ void MyServer::initAllRoutes() {
         request->send(SPIFFS, "/script.js", "text/javascript");
         });
 
+    //Route du style CSS
     this->on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(SPIFFS, "/style.css", "text/css");
         });
@@ -45,13 +48,43 @@ void MyServer::initAllRoutes() {
         request->send(SPIFFS, "/logo_SAC.png", "image/png");
         });
 
-    this->on("/getNomEsp", HTTP_GET, [](AsyncWebServerRequest *request) {
+
+    // Recupère la liste des bois
+    this->on("/getListeWood", HTTP_GET, [](AsyncWebServerRequest *request) {
         std::string repString = "";
-        if (ptrToCallBackFunction) repString = (*ptrToCallBackFunction)("askNomFour");
-        String lireNomDuFour =String(repString.c_str());
-        request->send(200, "text/plain", lireNomDuFour );
+        if (ptrToCallBackFunction) repString = (*ptrToCallBackFunction)("askListeWood");
+        DynamicJsonDocument doc(2048);
+        deserializeJson(doc,repString);
+        String lesBois;
+        for(JsonObject elem : doc.as<JsonArray>()){
+            String woodName = elem["name"];
+            lesBois += woodName + String(";");
+        }
+        request->send(200, "text/plain", lesBois);
+        });
+    
+    // Recupère les information d'un Bois
+    this->on("/afficherBois", HTTP_POST, [](AsyncWebServerRequest *request) {
+        std::string repString = "";
+        String nomBois = request->getParam("nomBois", true)->value();
+        char buffer[100];
+        sprintf(buffer, "afficherBois %S", nomBois);
+        if (ptrToCallBackFunction) repString = (*ptrToCallBackFunction)(buffer);
+        DynamicJsonDocument doc(2048);
+        deserializeJson(doc,repString);
+        String leBois;
+        for(JsonObject elem : doc.as<JsonArray>()){  
+            String woodName = elem["name"];
+            String woodType = elem["type"];
+            String woodOrigine = elem["origin"];
+            String woodDryingTime = elem["dryingTime"];
+            String woodTemperature = elem["temperature"];
+            leBois += woodName + String(";") +  woodType + String(";") + woodOrigine + String(";") + woodDryingTime + String(";") + woodTemperature + String(";");
+        }
+        request->send(200, "text/plain", leBois);
         });
 
+    // Recupère la température du four
     this->on("/lireTemp", HTTP_GET, [](AsyncWebServerRequest *request) {
         std::string repString = "";
         if (ptrToCallBackFunction) repString = (*ptrToCallBackFunction)("askTempFour");
@@ -59,7 +92,7 @@ void MyServer::initAllRoutes() {
         request->send(200, "text/plain", lireTempDuFour );
         });
 
-
+    // Demarrage du four
     this->on("/ActionToDo", HTTP_POST, [](AsyncWebServerRequest *request) {
         if (request->hasParam("actionToDo", true)) {
         String actionToDo = request->getParam("actionToDo", true)->value();
@@ -70,7 +103,7 @@ void MyServer::initAllRoutes() {
         request->send(204);
         });
 
-   
+    // Fonction appeler si aucune page trouvé.
     this->onNotFound([](AsyncWebServerRequest *request){
         request->send(404, "text/plain", "Page Not Found");
         });

@@ -15,7 +15,7 @@
                 <div class="bois">
                     <h2>Type de Bois :</h2>
                     <div class="type">
-                        <select id="liste_bois" class="liste_bois">
+                        <select id="liste_bois" class="liste_bois" onchange="afficherBois()">
                             <option value="">Default</option>
                         </select>
                     </div>
@@ -24,24 +24,24 @@
                         <table class="tableau_caracteristique">
                             <tr>
                                 <td>Bois</td>
-                                <td>: Erable</td>
+                                <td id="carac_bois">: Erable</td>
                             </tr>
                             <tr>
                                 <td>Type</td>
-                                <td>: Dur</td>
+                                <td id="carac_type">: Dur</td>
                             </tr>
                             <tr>
                                 <td>Origine</td>
-                                <td>: US</td>
+                                <td id="carac_origine">: US</td>
                             </tr>
                             <tr>
                                 <td>Temps de séchage</td>
-                                <td>: 20 secondes</td>
+                                <td id="carac_tempsSechage">: 20 secondes</td>
                             </tr>
                             <tr>
                                 <td>Température min</td>
-                                <td>: 25 Celcuis</td>
-                            </tr>
+                                <td id="carac_temperatureMin">: 25 Celcuis</td>
+                             </tr>
                         </table>
                     </div>
                 </div>
@@ -59,13 +59,16 @@
                         </div>
                         <br/><br/><br/>
                         <div class="information_bois conteneur">
-                            <label class="alignleft">Erable</label>
-                            <label class="aligncenter"><label id="secondes">0s</label> /20 s  (min: 25 Celcius)</label>
+                            <label class="alignleft"><label id="bois">Erable</label></label>
+                            <label class="aligncenter"><label id="secondes">0s</label> /<label id="tempsSechage">20</label>s  (min: <label id="temperatureMin">25</label> Celcius)</label>
                             <label class="alignright"> O O O </label>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        <script>
+            getFromESP_ListeWood();
+        </script>
     </body>
 </html>
