@@ -2,7 +2,7 @@
 	# Matière : Objets Connectés
 	# Professeur : Dubé Alain
 	# Auteurs : Baudry Thomas - Guillou Quentin
-	# Lien : https://github.com/Huo1ong/ObjetsConnectes_ProjetIODeSession
+	# Lien : https://github.com/ThomasBaudry/Projet_SAC_ObjectsConnectes
   	# API : http://149.56.141.62:3000/myApiDocs/
 
 ## Installation
